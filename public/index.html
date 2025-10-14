@@ -1,1 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ultimate Proxy</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Top bar showing the unproxied link -->
+  <div id="topBar">
+    <span id="originalLink">No link loaded</span>
+    <button id="copyBtn">Copy Link</button>
+    <button id="openBtn">Open Original</button>
+  </div>
 
+  <div class="container">
+    <form id="searchForm">
+      <input type="text" id="query" placeholder="Search DuckDuckGo..." />
+      <button type="submit">Search</button>
+    </form>
+    <iframe id="results" sandbox="allow-scripts allow-forms allow-same-origin" frameborder="0"></iframe>
+  </div>
+
+  <script>
+    const form = document.getElementById('searchForm');
+    const iframe = document.getElementById('results');
+    const originalLink = document.getElementById('originalLink');
+    const copyBtn = document.getElementById('copyBtn');
+    const openBtn = document.getElementById('openBtn');
+
+    function setLink(url) {
+      originalLink.textContent = url;
+      copyBtn.dataset.link = url;
+      openBtn.dataset.link = url;
+    }
+
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      const query = encodeURIComponent(document.getElementById('query').value);
+      const duckLink = `https://lite.duckduckgo.com/50x.html?q=${query}`;
+      const proxyLink = `/proxy/${encodeURIComponent(duckLink)}`;
+      iframe.src = proxyLink;
+      setLink(duckLink);
+    });
+
+    // Copy link button
+    copyBtn.addEventListener('click', () => {
+      navigator.clipboard.writeText(copyBtn.dataset.link).then(() => {
+        alert('Link copied!');
+      });
+    });
+
+    // Open original link in new tab
+    openBtn.addEventListener('click', () => {
+      window.open(openBtn.dataset.link, '_blank');
+    });
+  </script>
+</body>
+</html>
