@@ -2,6 +2,9 @@
   publish = "public"
   functions = "functions"
 
+[build.environment]
+  NODE_VERSION = "18"
+
 [[redirects]]
   from = "/proxy/*"
   to = "/.netlify/functions/proxy?url=:splat"
