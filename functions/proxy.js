@@ -1,18 +1,12 @@
 const fetch = require('node-fetch');
 
-const ALLOWED_HOSTS = ["lite.duckduckgo.com", "duckduckgo.com"];
-
 exports.handler = async function(event, context) {
   try {
-    const target = event.queryStringParameters?.url;
-    if (!target) return { statusCode: 400, body: "Missing 'url'" };
+    // Grab the target URL from the path after /proxy/
+    const rawPath = event.path.replace(/^\/proxy\//, '');
+    if (!rawPath) return { statusCode: 400, body: "Missing URL" };
 
-    const url = decodeURIComponent(target);
-    const parsed = new URL(url);
-
-    if (!ALLOWED_HOSTS.includes(parsed.hostname)) {
-      return { statusCode: 403, body: "Host not allowed" };
-    }
+    const url = decodeURIComponent(rawPath);
 
     const method = event.httpMethod || "GET";
     const headers = {};
@@ -42,30 +36,20 @@ exports.handler = async function(event, context) {
     const buffer = await res.buffer();
     let content = buffer.toString('utf8');
 
-    // Rewrite links in HTML to stay proxied
+    // Rewrite links and sources to stay proxied
     if ((res.headers.get("content-type") || "").includes("text/html")) {
-      content = content.replace(
-        /href=["'](.*?)["']/gi,
-        (match, p1) => {
-          try {
-            if(p1.startsWith("http")) return `href="/proxy/${encodeURIComponent(p1)}"`;
-            return match;
-          } catch(e) {
-            return match;
-          }
-        }
-      );
-      content = content.replace(
-        /src=["'](.*?)["']/gi,
-        (match, p1) => {
-          try {
-            if(p1.startsWith("http")) return `src="/proxy/${encodeURIComponent(p1)}"`;
-            return match;
-          } catch(e) {
-            return match;
-          }
-        }
-      );
+      content = content.replace(/href=["'](.*?)["']/gi, (match, p1) => {
+        try { 
+          if(p1.startsWith("http")) return `href="/proxy/${encodeURIComponent(p1)}"`; 
+          return match;
+        } catch(e){ return match; }
+      });
+      content = content.replace(/src=["'](.*?)["']/gi, (match, p1) => {
+        try { 
+          if(p1.startsWith("http")) return `src="/proxy/${encodeURIComponent(p1)}"`; 
+          return match;
+        } catch(e){ return match; }
+      });
     }
 
     const isBinary = !/(text|application\/json|javascript|xml)/i.test(res.headers.get("content-type") || "");
