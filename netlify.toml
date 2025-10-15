@@ -1,1 +1,10 @@
+[build]
+  publish = "public"         # static site folder
+  functions = "functions"    # serverless functions folder
 
+# Redirect /proxy/* to the proxy function
+[[redirects]]
+  from = "/proxy/*"
+  to = "/.netlify/functions/proxy?url=:splat"
+  status = 200
+  force = true
