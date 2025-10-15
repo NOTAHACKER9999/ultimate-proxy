@@ -7,9 +7,11 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
 <div id="browserBar">
-  <button id="newTabBtn">+ Tab</button>
-  <input type="text" id="urlInput" placeholder="Enter URL or search" />
+  <button id="undoBtn">⟲</button>
+  <button id="redoBtn">⟳</button>
+  <input type="text" id="urlInput" placeholder="Search or enter URL"/>
   <button id="goBtn">Go</button>
 </div>
 
@@ -19,61 +21,68 @@
 const tabsContainer = document.getElementById('tabsContainer');
 const urlInput = document.getElementById('urlInput');
 const goBtn = document.getElementById('goBtn');
-const newTabBtn = document.getElementById('newTabBtn');
+const undoBtn = document.getElementById('undoBtn');
+const redoBtn = document.getElementById('redoBtn');
 
 let tabs = [];
+let historyStack = [];
+let redoStack = [];
 let currentTab = null;
 
 function updateBrowserBar(url) {
-  // Show only the target URL, hide proxy prefix
   urlInput.value = url;
 }
 
-// Create a new tab
-function createTab(targetUrl) {
+function createTab(url) {
   const iframe = document.createElement('iframe');
-  iframe.src = '/proxy/' + encodeURIComponent(targetUrl);
+  iframe.src = '/proxy/' + encodeURIComponent(url);
   iframe.className = 'tabFrame';
+  tabsContainer.innerHTML = '';
   tabsContainer.appendChild(iframe);
-  tabs.push(iframe);
-
-  switchTab(tabs.length - 1);
-  updateBrowserBar(targetUrl);
-}
-
-// Switch to a tab
-function switchTab(index) {
-  tabs.forEach((tab, i) => {
-    tab.style.display = i === index ? 'block' : 'none';
-  });
-  currentTab = index;
-
-  // Update browser bar to show current tab's URL
-  if(tabs[currentTab]) {
-    const src = tabs[currentTab].src;
-    const decoded = decodeURIComponent(src.split('/proxy/')[1] || '');
-    updateBrowserBar(decoded);
-  }
+  tabs = [iframe];
+  currentTab = 0;
+  historyStack = [url];
+  redoStack = [];
+  updateBrowserBar(url);
 }
 
 // Navigate current tab
 function navigate(input) {
   let url;
-  if(input.startsWith('http')) {
-    url = input;
-  } else {
-    url = 'https://duckduckgo.com/?q=' + encodeURIComponent(input) + '&ia=web';
-  }
+  if(input.startsWith('http')) url = input;
+  else url = 'https://duckduckgo.com/?q=' + encodeURIComponent(input) + '&ia=web';
+
   tabs[currentTab].src = '/proxy/' + encodeURIComponent(url);
+  historyStack.push(url);
+  redoStack = [];
   updateBrowserBar(url);
 }
+
+// Undo / Redo
+undoBtn.addEventListener('click', () => {
+  if(historyStack.length > 1) {
+    const last = historyStack.pop();
+    redoStack.push(last);
+    const prev = historyStack[historyStack.length-1];
+    tabs[currentTab].src = '/proxy/' + encodeURIComponent(prev);
+    updateBrowserBar(prev);
+  }
+});
+
+redoBtn.addEventListener('click', () => {
+  if(redoStack.length > 0) {
+    const next = redoStack.pop();
+    historyStack.push(next);
+    tabs[currentTab].src = '/proxy/' + encodeURIComponent(next);
+    updateBrowserBar(next);
+  }
+});
 
 // Event listeners
 goBtn.addEventListener('click', () => navigate(urlInput.value));
 urlInput.addEventListener('keypress', e => { if(e.key === 'Enter') navigate(urlInput.value); });
-newTabBtn.addEventListener('click', () => createTab('https://duckduckgo.com/'));
 
-// Auto-load DuckDuckGo on start
+// Auto-load DuckDuckGo
 createTab('https://duckduckgo.com/');
 </script>
 </body>
