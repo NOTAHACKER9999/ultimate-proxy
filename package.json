@@ -1,1 +1,24 @@
-
+{
+  "name": "ultimate-proxy",
+  "version": "1.0.0",
+  "description": "Better-than-Ultraviolet privacy-first proxy using DuckDuckGo",
+  "main": "functions/proxy.js",
+  "type": "module",
+  "scripts": {
+    "start": "netlify dev"
+  },
+  "dependencies": {
+    "node-fetch": "^3.4.0"
+  },
+  "devDependencies": {
+    "netlify-cli": "^12.0.0"
+  },
+  "keywords": [
+    "proxy",
+    "netlify",
+    "duckduckgo",
+    "serverless"
+  ],
+  "author": "Glitch Override",
+  "license": "MIT"
+}
