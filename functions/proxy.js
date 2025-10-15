@@ -1,8 +1,8 @@
-import fetch from 'node-fetch';
+const fetch = require('node-fetch');
 
 const ALLOWED_HOSTS = ["lite.duckduckgo.com", "duckduckgo.com"];
 
-export async function handler(event, context) {
+exports.handler = async function(event, context) {
   try {
     const target = event.queryStringParameters?.url;
     if (!target) return { statusCode: 400, body: "Missing 'url'" };
@@ -39,10 +39,10 @@ export async function handler(event, context) {
       }
     });
 
-    const buffer = await res.arrayBuffer();
-    let content = Buffer.from(buffer).toString('utf8');
-    
-    // Rewrite all links inside HTML to go through the proxy automatically
+    const buffer = await res.buffer();
+    let content = buffer.toString('utf8');
+
+    // Rewrite links in HTML to stay proxied
     if ((res.headers.get("content-type") || "").includes("text/html")) {
       content = content.replace(
         /href=["'](.*?)["']/gi,
@@ -73,11 +73,11 @@ export async function handler(event, context) {
     return {
       statusCode: res.status,
       headers: resHeaders,
-      body: isBinary ? Buffer.from(buffer).toString('base64') : content,
+      body: isBinary ? buffer.toString('base64') : content,
       isBase64Encoded: isBinary
     };
 
   } catch (err) {
     return { statusCode: 500, body: `Proxy error: ${err.message}` };
   }
-}
+};
