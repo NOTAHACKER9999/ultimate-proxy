@@ -7,65 +7,74 @@
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-<div id="topBar">
-  <span id="originalLink">No link loaded</span>
-  <button id="copyBtn">Copy Link</button>
-  <button id="openBtn">Open Original</button>
+<div id="browserBar">
+  <button id="newTabBtn">+ Tab</button>
+  <input type="text" id="urlInput" placeholder="Enter URL or search" />
+  <button id="goBtn">Go</button>
 </div>
 
-<div class="container">
-  <form id="searchForm">
-    <input type="text" id="query" placeholder="Search DuckDuckGo..." />
-    <button type="submit">Search</button>
-  </form>
-  <iframe id="results" sandbox="allow-scripts allow-forms allow-same-origin"></iframe>
-</div>
+<div id="tabsContainer"></div>
 
 <script>
-const form = document.getElementById('searchForm');
-const iframe = document.getElementById('results');
-const originalLink = document.getElementById('originalLink');
-const copyBtn = document.getElementById('copyBtn');
-const openBtn = document.getElementById('openBtn');
+const tabsContainer = document.getElementById('tabsContainer');
+const urlInput = document.getElementById('urlInput');
+const goBtn = document.getElementById('goBtn');
+const newTabBtn = document.getElementById('newTabBtn');
 
-// LocalStorage bookmarks/history
-let historyList = JSON.parse(localStorage.getItem('history') || '[]');
+let tabs = [];
+let currentTab = null;
 
-function setLink(url) {
-  originalLink.textContent = url;
-  copyBtn.dataset.link = url;
-  openBtn.dataset.link = url;
-  if(!historyList.includes(url)) {
-    historyList.unshift(url);
-    if(historyList.length > 50) historyList.pop();
-    localStorage.setItem('history', JSON.stringify(historyList));
+function updateBrowserBar(url) {
+  // Show only the target URL, hide proxy prefix
+  urlInput.value = url;
+}
+
+// Create a new tab
+function createTab(targetUrl) {
+  const iframe = document.createElement('iframe');
+  iframe.src = '/proxy/' + encodeURIComponent(targetUrl);
+  iframe.className = 'tabFrame';
+  tabsContainer.appendChild(iframe);
+  tabs.push(iframe);
+
+  switchTab(tabs.length - 1);
+  updateBrowserBar(targetUrl);
+}
+
+// Switch to a tab
+function switchTab(index) {
+  tabs.forEach((tab, i) => {
+    tab.style.display = i === index ? 'block' : 'none';
+  });
+  currentTab = index;
+
+  // Update browser bar to show current tab's URL
+  if(tabs[currentTab]) {
+    const src = tabs[currentTab].src;
+    const decoded = decodeURIComponent(src.split('/proxy/')[1] || '');
+    updateBrowserBar(decoded);
   }
 }
 
-form.addEventListener('submit', e => {
-  e.preventDefault();
-  const query = encodeURIComponent(document.getElementById('query').value);
-  const duckLink = `https://lite.duckduckgo.com/50x.html?q=${query}`;
-  const proxyLink = `/proxy/${encodeURIComponent(duckLink)}`;
-  iframe.src = proxyLink;
-  setLink(duckLink);
-});
-
-copyBtn.addEventListener('click', () => {
-  navigator.clipboard.writeText(copyBtn.dataset.link).then(() => alert('Link copied!'));
-});
-
-openBtn.addEventListener('click', () => {
-  window.open(openBtn.dataset.link, '_blank');
-});
-
-// Optional: load last visited page automatically
-if(historyList.length > 0) {
-  const last = historyList[0];
-  iframe.src = `/proxy/${encodeURIComponent(last)}`;
-  setLink(last);
+// Navigate current tab
+function navigate(input) {
+  let url;
+  if(input.startsWith('http')) {
+    url = input;
+  } else {
+    url = 'https://duckduckgo.com/?q=' + encodeURIComponent(input) + '&ia=web';
+  }
+  tabs[currentTab].src = '/proxy/' + encodeURIComponent(url);
+  updateBrowserBar(url);
 }
+
+// Event listeners
+goBtn.addEventListener('click', () => navigate(urlInput.value));
+urlInput.addEventListener('keypress', e => { if(e.key === 'Enter') navigate(urlInput.value); });
+newTabBtn.addEventListener('click', () => createTab('https://duckduckgo.com/'));
+
+// Auto-load DuckDuckGo on start
+createTab('https://duckduckgo.com/');
 </script>
 </body>
-    </html>
+</html>
