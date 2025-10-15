@@ -1,20 +1,20 @@
 {
   "name": "ultimate-proxy-browser",
   "version": "1.0.0",
-  "description": "Ultimate DuckDuckGo privacy proxy browser",
-  "main": "functions/proxy.js",
+  "description": "Ultimate DuckDuckGo privacy proxy browser for Vercel",
+  "main": "api/proxy.js",
   "scripts": {
-    "start": "netlify dev"
+    "start": "vercel dev"
   },
   "dependencies": {
     "node-fetch": "^2.6.7"
   },
   "devDependencies": {
-    "netlify-cli": "^12.0.0"
+    "vercel": "^28.0.0"
   },
   "author": "Glitch Override",
   "license": "MIT",
   "engines": {
-    "node": "22.x"
+    "node": "18.x"
   }
 }
