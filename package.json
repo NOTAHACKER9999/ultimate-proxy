@@ -3,16 +3,18 @@
   "version": "1.0.0",
   "description": "Ultimate DuckDuckGo privacy proxy browser",
   "main": "functions/proxy.js",
-  "type": "module",
   "scripts": {
     "start": "netlify dev"
   },
   "dependencies": {
-    "node-fetch": "^3.6.1"
+    "node-fetch": "^2.6.7"
   },
   "devDependencies": {
     "netlify-cli": "^12.0.0"
   },
   "author": "Glitch Override",
-  "license": "MIT"
+  "license": "MIT",
+  "engines": {
+    "node": "18.x"
+  }
 }
